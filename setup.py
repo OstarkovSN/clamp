@@ -13,7 +13,7 @@ setup(
     author_email="ph.seidl92@gmail.com",
     packages=find_packages(exclude=["tests*"]),
     install_requires="""mhnreact@git+https://github.com/ml-jku/mhn-react.git
-        clip@git+https://github.com/openai/CLIP.git
+        clip@git+https://github.com/openai/CLIP.git@d05afc436d78f1c48dc0dbf8e5980a9d471f35f6
         numpy
         tqdm
         scikit-learn
