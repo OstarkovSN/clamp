@@ -1,4 +1,77 @@
-# :clamp: CLAMP
+# CLAMP (installable mirror)
+
+This repository is a mirror of [ml-jku/clamp](https://github.com/ml-jku/clamp), the code and
+pretrained weights for **CLAMP** (Contrastive Language-Assay Molecule Pre-Training; Seidl et al.,
+ICML 2023, [arXiv:2303.03363](https://arxiv.org/abs/2303.03363)). The model, the code and all
+credit belong to the original authors. This mirror only adds two small packaging fixes so that
+`pip` and `uv` can install CLAMP in a current Python environment.
+
+## Why this mirror exists
+
+Installing the upstream repository with build isolation (the default for `pip` and `uv`) fails
+in current environments:
+
+1. `setup.py` imported `pkg_resources` without using it. Setuptools 70 and later no longer
+   provides `pkg_resources` in an isolated build environment, so the build stopped with
+   `ModuleNotFoundError: No module named 'pkg_resources'`. The import is removed.
+2. The unpinned `clip @ git+https://github.com/openai/CLIP.git` dependency resolved to an old
+   CLIP commit that has the same `pkg_resources` problem. It is pinned to
+   [`openai/CLIP@d05afc4`](https://github.com/openai/CLIP/commit/d05afc436d78f1c48dc0dbf8e5980a9d471f35f6),
+   the first revision after OpenAI's own fix.
+
+Nothing else differs from upstream (as of upstream commit `61575cb`, February 2026): the model
+code, the weights it downloads and the results are the same.
+
+## Install
+
+```bash
+pip install "clamp @ git+https://github.com/OstarkovSN/clamp.git"
+# or
+uv pip install "clamp @ git+https://github.com/OstarkovSN/clamp.git"
+```
+
+or, as a dependency in `pyproject.toml`:
+
+```toml
+dependencies = ["clamp @ git+https://github.com/OstarkovSN/clamp.git"]
+```
+
+Install a PyTorch build that suits your hardware first if you need a specific CUDA or CPU wheel.
+
+## Usage
+
+```python
+import torch
+import clamp
+
+model = clamp.CLAMP(device="cpu")  # downloads the pretrained weights on first use
+model.eval()
+
+molecules = ["CCOP(=O)(Nc1cccc(Cl)c1)OCC", "O=C(O)c1ccccc1O", "NNP(=S)(NN)c1ccccc1", "CC(=O)OC1=CC=CC=C1C(=O)O"]
+assays = ["HIV: Experimentally measured abilities to inhibit HIV replication."]
+
+with torch.no_grad():
+    probs = model.forward_dense(molecules, assays).softmax(dim=0)  # (molecules, assays)
+    embeddings = model.compound_encoder(molecules)                 # molecule embeddings
+```
+
+The weights (about 650 MB) are saved under `./data/models/clamp_clip/` relative to the working
+directory. CLAMP downloads them only if that directory does not exist, so if a download is
+interrupted, delete the directory before trying again.
+
+Training, the FS-Mol and PubChem data and the evaluation scripts are described in the original
+README below.
+
+## Licence and citation
+
+The software is licensed under the GNU General Public License v3.0 and the model under the
+terms in [`LICENSE`](LICENSE), both unchanged from upstream; the two packaging fixes are
+released under the same terms. If you use CLAMP, please cite the original paper (see
+[Cite](#books-cite) below).
+
+---
+
+## Original README
 
 [![arXiv](https://img.shields.io/badge/arXiv-2303.03363-b31b1b.svg)](https://arxiv.org/abs/2303.03363)
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
@@ -28,7 +101,7 @@ You may need to adjust the CUDA version.
 
 Another option is:
 ```bash
-pip install -e git+https://github.com/ml-jku/clamp.git
+pip install -e git+https://github.com/ml-jku/clamp.git  # upstream; see "Install" above for this mirror
 ```
 
 ## :fire: Use a pretrained CLAMP model
